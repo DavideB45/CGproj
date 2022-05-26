@@ -118,7 +118,7 @@ flatShader = function (gl) {
       vec3 lSpec =  (uColor.xyz + vec3(10.0, 0.0, 0.0))*kSpec;
 
       gl_FragColor = vec4(lDiffuse + lSpec, 1.0);
-      //gl_FragColor = vec4(color_of_vector(vDir), 1.0);
+      gl_FragColor = vec4(color_of_vector(vDir), 1.0);
 
     } else {
       vec3 N = cross( dFdx(vPos), dFdy(vPos) );
