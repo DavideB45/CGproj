@@ -10,8 +10,8 @@ flatShader = function (gl) {
     attribute vec3 aPosition; 
     attribute vec3 aNormal;
 
-    varying vec3 vPos;
-    varying vec3 viewPos;
+    varying vec3 vPos;// posizione del vertice
+    varying vec3 viewPos;// Direzione di vista
     varying vec3 lDir;
 
     varying vec3 iNor;
