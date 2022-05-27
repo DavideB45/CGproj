@@ -194,8 +194,7 @@ Renderer.drawScene = function (gl) {
   var ratio = width / height;
   var stack = new MatrixStack();
 
-  Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
-  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
+  
   gl.viewport(0, 0, width, height);
   gl.enable(gl.DEPTH_TEST);
   // Clear the framebuffer
@@ -211,6 +210,8 @@ Renderer.drawScene = function (gl) {
   } else {
     Renderer.gl.uniform3fv(this.flatShader.uLightDirection, [0.0, 1.0, 0.0]);
   }
+  Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
+  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
 
   gl.uniformMatrix4fv(this.flatShader.uProjectionMatrixLocation,false,glMatrix.mat4.perspective(glMatrix.mat4.create(),3.14 / 4, ratio, 1, 500));
   Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
@@ -233,7 +234,11 @@ Renderer.drawScene = function (gl) {
 
   // drawing the static elements (ground, track and buldings)
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
+  Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
+  gl.uniform1i(this.flatShader.uSampler, 0);
 	drawObject(gl, Game.scene.groundObj, [0.3, 0.7, 0.2, 1.0], this.flatShader);
+
+  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
  	drawObject(gl, Game.scene.trackObj, [0.9, 0.8, 0.7, 1.0], this.flatShader);
 	for (var i in Game.scene.buildingsObj) 
 		drawObject(gl, Game.scene.buildingsObj[i], [0.8, 0.8, 0.8, 1.0], this.flatShader);
@@ -270,6 +275,7 @@ Renderer.setupAndStart = function () {
 
   /* create the shader */
   Renderer.flatShader = new flatShader(Renderer.gl);
+  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png");
   
   /* add listeners for the mouse / keyboard events */
   Renderer.canvas.addEventListener('mousemove',on_mouseMove,false);

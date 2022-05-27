@@ -9,14 +9,14 @@ flatShader = function (gl) {
 
     attribute vec3 aPosition; 
     attribute vec3 aNormal;
-    attribute vec3 aTexCoord;
+    attribute vec2 aTexCoord;
 
     varying vec3 vPos;// posizione del vertice
     varying vec3 viewPos;// Direzione di vista
     varying vec3 lDir;// direzione luce solare
     varying vec3 iNor;// normale interpolata
 
-    varying vec3 vTexCoord;// coordinata texture interpolata
+    varying vec2 vTexCoord;// coordinata texture interpolata
 
     void main(void)                                
     {
@@ -61,13 +61,14 @@ flatShader = function (gl) {
 
   uniform int shadingMode;// 0_flat_shading  1_Phong_shading 2_no_light
   uniform int textureMode;// 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
-  uniform vec4 uColor;
-  varying vec3 vTexCoord;
+  uniform vec4 uColor;// colore dell'oggetto
+  uniform sampler2D uSampler;// texture dell'oggetto
+  varying vec2 vTexCoord;// coordinate texture del frammento
 
-  // transform a vector in a vector of RGB
   vec3 color_of_vector(vec3 v);
-  // compute the diffusive component
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N);
+  // get color according to texture mode
+  vec4 getBaseColor();
 
   void main(void){     
     if(shadingMode < 2){
@@ -104,8 +105,8 @@ flatShader = function (gl) {
         }
         kDiffuse += 0.25;
       }
-      vec3 lDiffuse = (uColor.xyz + vec3(0.0, 0.0, 0))*kDiffuse;
-      gl_FragColor = vec4(lDiffuse, 1.0);
+      vec3 lDiffuse = (getBaseColor().xyz + vec3(0.0, 0.0, 0))*kDiffuse;
+      gl_FragColor = vec4(lDiffuse, uColor[3]);
 
     } else {
       vec3 N = cross( dFdx(vPos), dFdy(vPos) );
@@ -130,6 +131,16 @@ flatShader = function (gl) {
       }
       float pick = max(dot(liDir,N), 0.2);
       return (pow(5.0, -pow((cosangle-0.6)/0.3, 4.0))/(12.0*pick));
+    }
+  }
+
+  //textureMode :: 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
+  vec4 getBaseColor(){
+    if(textureMode == 0){
+      return uColor;
+    } else {
+      //return vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0);
+      return texture2D(uSampler, vTexCoord*5.0);
     }
   }
   `;
@@ -174,7 +185,7 @@ flatShader = function (gl) {
   shaderProgram.uModelMatrxLocation = gl.getUniformLocation(shaderProgram, "uModelMatrix");
   shaderProgram.uProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
   shaderProgram.uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
-
+  shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
   shaderProgram.shadingMode = gl.getUniformLocation(shaderProgram, "shadingMode");
   shaderProgram.textureMode = gl.getUniformLocation(shaderProgram, "textureMode")
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");

@@ -11,7 +11,7 @@ createObjectBuffers = function (gl, obj) {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, obj.triangleIndices, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-    if(obj.texCoord != undefined){
+    if(obj.texCoords != undefined){
 		obj.texBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, obj.texCoords, gl.STATIC_DRAW);
@@ -35,7 +35,7 @@ drawObject = function (gl, obj, fillColor, usedShader) {
         gl.vertexAttribPointer(usedShader.aNormalIndex, 3, gl.FLOAT, false, 0, 0);
     }
 
-    if(obj.texCoord != undefined){
+    if(obj.texCoords != undefined){
 		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
 		gl.enableVertexAttribArray(usedShader.aTexCoordIndex);
 		gl.vertexAttribPointer(usedShader.aTexCoordIndex, 2, gl.FLOAT, false, 0, 0);
@@ -56,7 +56,7 @@ drawObject = function (gl, obj, fillColor, usedShader) {
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
-var loadOnGPU = function( jsonMesh , gl) {
+loadOnGPU = function( jsonMesh , gl) {
     var gpuMesh = {
      vertexBuffer: null,
      normalBuffer: null,
@@ -99,4 +99,22 @@ MultiplyMatrixVector = function (matrix, vector) {
         out[i] = matrix[0 * 4 + i] * vector[0] + matrix[1 * 4 + i] * vector[1] + matrix[2 * 4 + i] * vector[2] + matrix[3 * 4 + i];
     }
     return out;
+}
+
+loadTexture = function(gl, path){
+    var img = new Image();
+	img.src = path;
+	img.addEventListener('load', function(){
+		var texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		//               cos'è      mipmap lev   originale  in GPU    tipo di dato    immagine
+		gl.texImage2D(gl.TEXTURE_2D,    0,        gl.RGB,   gl.RGB, gl.UNSIGNED_BYTE,    img   );
+		// parametri per il wrapping 
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		// parametri per il filtraggio, come gestire minification e magnification
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.generateMipmap(gl.TEXTURE_2D);
+	})
 }
