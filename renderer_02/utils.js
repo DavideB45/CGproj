@@ -28,6 +28,11 @@ drawObject = function (gl, obj, fillColor, usedShader) {
         gl.enableVertexAttribArray(usedShader.aNormalIndex);
         gl.vertexAttribPointer(usedShader.aNormalIndex, 3, gl.FLOAT, false, 0, 0);
     }
+    if(obj.texCoord != null && obj.texCoord != undefined){
+		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
+		gl.enableVertexAttribArray(program.aTexCoordIndex);
+		gl.vertexAttribPointer(program.aTexCoordIndex, 2, gl.FLOAT, false, 0, 0);
+	}
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBufferTriangles);
     gl.uniform4fv(usedShader.uColorLocation, fillColor);
@@ -78,6 +83,7 @@ var loadOnGPU = function( jsonMesh , gl) {
   
     return gpuMesh;
 }
+
 MultiplyMatrixVector = function (matrix, vector) {
     let out = [0, 0, 0];
     for (let i = 0; i < 3; i++) {
