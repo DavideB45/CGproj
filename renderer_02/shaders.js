@@ -9,12 +9,14 @@ flatShader = function (gl) {
 
     attribute vec3 aPosition; 
     attribute vec3 aNormal;
+    attribute vec3 aTexCoord;
 
     varying vec3 vPos;// posizione del vertice
     varying vec3 viewPos;// Direzione di vista
-    varying vec3 lDir;
+    varying vec3 lDir;// direzione luce solare
+    varying vec3 iNor;// normale interpolata
 
-    varying vec3 iNor;
+    varying vec3 vTexCoord;// coordinata texture interpolata
 
     void main(void)                                
     {
@@ -34,14 +36,14 @@ flatShader = function (gl) {
       //iNor = normalize((uNormalMatrix*vec4(aNormal, 0.0)).xyz);
       iNor = aNormal;
 
+      vTexCoord = aTexCoord;
 	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);     
     }                                              
   `;
 //flat Shader
   var fragmentShaderSource = `
   #extension GL_OES_standard_derivatives : enable
-  precision highp float;        
-  uniform   mat4 uNormalMatrix;
+  precision highp float;
 
   #define ARR_MAX_LEN 20
   struct spotlight {
@@ -55,11 +57,12 @@ flatShader = function (gl) {
   varying vec3 vPos;// fragment pos
   varying vec3 viewPos;// view direction
   varying vec3 lDir;// light direction
-
   varying vec3 iNor;// interpolated normal
 
-  uniform int shadingMode;
+  uniform int shadingMode;// 0_flat_shading  1_Phong_shading 2_no_light
+  uniform int textureMode;// 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
   uniform vec4 uColor;
+  varying vec3 vTexCoord;
 
   // transform a vector in a vector of RGB
   vec3 color_of_vector(vec3 v);
@@ -146,11 +149,13 @@ flatShader = function (gl) {
   // Create the shader program
   var aPositionIndex = 0;
   var aNormalIndex = 1;
+  var aTexCoordIndex = 2;
   var shaderProgram = gl.createProgram();
   gl.attachShader(shaderProgram, vertexShader);
   gl.attachShader(shaderProgram, fragmentShader);
   gl.bindAttribLocation(shaderProgram, aPositionIndex, "aPosition");
   gl.bindAttribLocation(shaderProgram, aNormalIndex, "aNormal");
+  gl.bindAttribLocation(shaderProgram, aTexCoordIndex, "aTexCoord");
   
   gl.linkProgram(shaderProgram);
 
@@ -165,11 +170,13 @@ flatShader = function (gl) {
 
   shaderProgram.aPositionIndex = aPositionIndex;
   shaderProgram.aNormalIndex = aNormalIndex;
+  shaderProgram.aTexCoordIndex = aTexCoordIndex;
   shaderProgram.uModelMatrxLocation = gl.getUniformLocation(shaderProgram, "uModelMatrix");
   shaderProgram.uProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
   shaderProgram.uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
 
   shaderProgram.shadingMode = gl.getUniformLocation(shaderProgram, "shadingMode");
+  shaderProgram.textureMode = gl.getUniformLocation(shaderProgram, "textureMode")
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
   shaderProgram.uLightDirection = gl.getUniformLocation(shaderProgram, "uLightDirection");
   shaderProgram.uViewInvertedLocation = gl.getUniformLocation(shaderProgram, "uViewInverted");
@@ -188,60 +195,3 @@ flatShader = function (gl) {
 
   return shaderProgram;
 };
-
-
-simpleShader = function (gl) {//line 1,Listing 2.14
-  var vertexShaderSource = `
-    uniform   mat4 uModelViewMatrix;               
-    uniform   mat4 uProjectionMatrix;              
-    attribute vec3 aPosition;                      
-    void main(void)                                
-    {                                              
-      gl_Position = uProjectionMatrix *            
-      uModelViewMatrix * vec4(aPosition, 1.0);     
-    }                                              
-  `;
-
-  var fragmentShaderSource = `
-    precision highp float;                         
-    uniform vec4 uColor;                           
-    void main(void)                                
-    {                                              
-      gl_FragColor = vec4(uColor);                 
-    }                                             
-  `;
-
-  // create the vertex shader
-  var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(vertexShader, vertexShaderSource);
-  gl.compileShader(vertexShader);
-
-  // create the fragment shader
-  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(fragmentShader, fragmentShaderSource);
-  gl.compileShader(fragmentShader);
-
-  // Create the shader program
-  var aPositionIndex = 0;
-  var shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.bindAttribLocation(shaderProgram, aPositionIndex, "aPosition");
-  gl.linkProgram(shaderProgram);
-
-  // If creating the shader program failed, alert
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    var str = "Unable to initialize the shader program.\n\n";
-    str += "VS:\n" + gl.getShaderInfoLog(vertexShader) + "\n\n";
-    str += "FS:\n" + gl.getShaderInfoLog(fragmentShader) + "\n\n";
-    str += "PROG:\n" + gl.getProgramInfoLog(shaderProgram);
-    alert(str);
-  }
-
-  shaderProgram.aPositionIndex = aPositionIndex;
-  shaderProgram.uModelViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
-  shaderProgram.uProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
-  shaderProgram.uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
-
-  return shaderProgram;
-};//line 55

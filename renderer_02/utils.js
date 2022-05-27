@@ -10,7 +10,13 @@ createObjectBuffers = function (gl, obj) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBufferTriangles);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, obj.triangleIndices, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-  
+
+    if(obj.texCoord != undefined){
+		obj.texBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, obj.texCoords, gl.STATIC_DRAW);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	}
 }
 /* draw an object as specified in common/shapes/triangle.js for which the buffer 
 have alrady been created */
@@ -28,10 +34,11 @@ drawObject = function (gl, obj, fillColor, usedShader) {
         gl.enableVertexAttribArray(usedShader.aNormalIndex);
         gl.vertexAttribPointer(usedShader.aNormalIndex, 3, gl.FLOAT, false, 0, 0);
     }
-    if(obj.texCoord != null && obj.texCoord != undefined){
+
+    if(obj.texCoord != undefined){
 		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
-		gl.enableVertexAttribArray(program.aTexCoordIndex);
-		gl.vertexAttribPointer(program.aTexCoordIndex, 2, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(usedShader.aTexCoordIndex);
+		gl.vertexAttribPointer(usedShader.aTexCoordIndex, 2, gl.FLOAT, false, 0, 0);
 	}
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBufferTriangles);
@@ -39,11 +46,13 @@ drawObject = function (gl, obj, fillColor, usedShader) {
     gl.drawElements(gl.TRIANGLES, obj.triangleIndices.length, gl.UNSIGNED_SHORT, 0);
   
     gl.disable(gl.POLYGON_OFFSET_FILL);
-
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     gl.disableVertexAttribArray(usedShader.aPositionIndex);
     if (obj.normalBuffer != undefined) {
         gl.disableVertexAttribArray(usedShader.aNormalIndex);
+    }
+    if(obj.texCoord != undefined){
+        gl.disableVertexAttribArray(usedShader.aTexCoordIndex);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }

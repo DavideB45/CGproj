@@ -194,6 +194,8 @@ Renderer.drawScene = function (gl) {
   var ratio = width / height;
   var stack = new MatrixStack();
 
+  Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
+  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
   gl.viewport(0, 0, width, height);
   gl.enable(gl.DEPTH_TEST);
   // Clear the framebuffer
@@ -220,7 +222,6 @@ Renderer.drawScene = function (gl) {
   stack.loadIdentity();
 
   // drawing the car
-  Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
   this.drawCar(stack, gl);
 
   this.drawSpheres(gl, stack);
