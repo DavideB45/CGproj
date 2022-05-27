@@ -50,8 +50,8 @@ public class Server {
                 }
                 // ceck thge position of the file
                 File toSend;
-                if (!request.contains("./../")) {
-                    toSend = new File("./renderer02" + request.split(" ")[1]);
+                if (!request.contains("common")) {
+                    toSend = new File("./renderer_02" + request.split(" ")[1]);
                 } else {
                     toSend = new File("." + request.split(" ")[1]);
                 }
@@ -59,7 +59,7 @@ public class Server {
                 if (!toSend.exists() || !toSend.isFile()){
                     oStr.write("HTTP/1.0 404 NOT FOUND\n".getBytes(StandardCharsets.UTF_8));
                     System.out.println("No such file");
-                    System.out.println(toSend.toURI());
+                    System.out.println(toSend.toPath());
                     toSend = new File("./src/assig6/404file.html");
                 } else {
                     oStr.write("HTTP/1.0 200 OK\n".getBytes(StandardCharsets.UTF_8));
