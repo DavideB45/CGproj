@@ -26,8 +26,8 @@ flatShader = function (gl) {
       //viewPos = normalize(uModelMatrix*uViewInverted*vec4(0,0,-1,0)).xyz;
       //viewPos = normalize(uModelMatrix*vec4(normalize(uViewInverted*vec4(0,0,1,0)).xyz, 0)).xyz;
       //viewPos = normalize(uViewInverted*vec4(aPosition, 0)).xyz;
-      viewPos = -normalize(uModelMatrix*vec4(aPosition, 0)).xyz;
-      //viewPos = normalize(vPos);
+      //viewPos = -normalize(uModelMatrix*vec4(aPosition, 0)).xyz;
+      viewPos = normalize(vPos);
 
       lDir = normalize(vec4(uLightDirection,0)).xyz;
 
@@ -63,8 +63,6 @@ flatShader = function (gl) {
 
   // transform a vector in a vector of RGB
   vec3 color_of_vector(vec3 v);
-  // compute the specular component
-  float specularL(vec3 lDir, vec3 lPos, vec3 vieDir, vec3 N);
   // compute the diffusive component
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N);
 
@@ -72,37 +70,27 @@ flatShader = function (gl) {
     if(shadingMode < 2){
       vec3 N;
       if(shadingMode == 0){
-        //N = normalize(uNormalMatrix*vec4(normalize(cross( dFdx(vPos), dFdy(vPos) )), 0.0)).xyz;
         N = normalize(cross( dFdx(vPos), dFdy(vPos) ));
       } else {
         N = iNor;
       }
 
       float kDiffuse = 0.1;
-      float kSpec = 0.0;
       vec3 vDir = viewPos;
 
       if(dot(lDir, vec3(0, -1, 0)) < 0.0){
-        vec3 R = -lDir + 2.0*dot(lDir, N)*N;
-        kSpec = max(0.0, pow(dot(vDir, -R), 29.0));
         kDiffuse = max(dot(lDir, N), 0.2);
       } else {
-        for(int i = 10; i < 11 ; i++){// prec max 12
+        for(int i = 0; i < 12 ; i++){// prec max 12
           if(vPos.x < arrayLamp[i].position.x + 0.6 && 
             vPos.x > arrayLamp[i].position.x - 0.6 &&
             vPos.y < arrayLamp[i].position.y - 0.2 && 
             vPos.y > arrayLamp[i].position.y - 0.8 &&
             vPos.z < arrayLamp[i].position.z + 0.6 && 
             vPos.z > arrayLamp[i].position.z - 0.6){
-            kSpec = 1.0;
+            kDiffuse = 1.0;
             break;
           } else{
-            kSpec += specularL(
-              normalize(arrayLamp[i].position - vPos),
-              normalize(-arrayLamp[i].direction),
-              normalize(-vDir),
-              N
-            );
             kDiffuse += diffusiveL(
               normalize(arrayLamp[i].position - vPos),
               normalize(-arrayLamp[i].direction),
@@ -113,10 +101,7 @@ flatShader = function (gl) {
         }
         kDiffuse += 0.25;
       }
-
       vec3 lDiffuse = (uColor.xyz + vec3(0.0, 0.0, 0))*kDiffuse;
-      vec3 lSpec =  (uColor.xyz + vec3(10.0, 0.0, 0.0))*kSpec;
-
       gl_FragColor = vec4(lDiffuse, 1.0);
 
     } else {
@@ -127,24 +112,6 @@ flatShader = function (gl) {
 
   vec3 color_of_vector(vec3 v){
     return normalize(v)*0.5 + vec3(0.5);
-  }
-
-  float specularL(vec3 liDir, vec3 lPos, vec3 vieDir, vec3 N){
-    float cosangle = dot(liDir, lPos);
-    if(cosangle < 0.2){
-      return 0.0;
-    } else {
-      if(cosangle > 0.997){
-        return 0.3;
-      }
-      vec3 R = liDir + 2.0*dot(-liDir, N)*N;
-      float pick = max(0.0, pow(dot(vieDir, R), 33.0));
-      if(pick < -10.0){
-        return 0.0;
-      }
-      return pick*0.5;
-      return (pow(5.0, pow((pick-0.5)/0.3, 2.0))/12.0);
-    }
   }
 
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N){
@@ -159,8 +126,7 @@ flatShader = function (gl) {
         return 0.0;
       }
       float pick = max(dot(liDir,N), 0.2);
-      return pick*0.2;
-      //return (pow(5.0, -pow((cosangle-0.6)/0.3, 4.0))/(12.0*pick));
+      return (pow(5.0, -pow((cosangle-0.6)/0.3, 4.0))/(12.0*pick));
     }
   }
   `;
