@@ -35,7 +35,7 @@ drawObject = function (gl, obj, fillColor, usedShader) {
         gl.vertexAttribPointer(usedShader.aNormalIndex, 3, gl.FLOAT, false, 0, 0);
     }
 
-    if(obj.texCoords != undefined){
+    if(obj.texBuffer != undefined){
 		gl.bindBuffer(gl.ARRAY_BUFFER, obj.texBuffer);
 		gl.enableVertexAttribArray(usedShader.aTexCoordIndex);
 		gl.vertexAttribPointer(usedShader.aTexCoordIndex, 2, gl.FLOAT, false, 0, 0);
@@ -51,7 +51,7 @@ drawObject = function (gl, obj, fillColor, usedShader) {
     if (obj.normalBuffer != undefined) {
         gl.disableVertexAttribArray(usedShader.aNormalIndex);
     }
-    if(obj.texCoord != undefined){
+    if(obj.texCoords != undefined){
         gl.disableVertexAttribArray(usedShader.aTexCoordIndex);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -101,10 +101,11 @@ MultiplyMatrixVector = function (matrix, vector) {
     return out;
 }
 
-loadTexture = function(gl, path){
+loadTexture = function(gl, path, textureSlot){
     var img = new Image();
 	img.src = path;
 	img.addEventListener('load', function(){
+        Renderer.gl.activeTexture(textureSlot);
 		var texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		//               cos'è      mipmap lev   originale  in GPU    tipo di dato    immagine

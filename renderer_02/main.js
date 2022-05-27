@@ -237,9 +237,10 @@ Renderer.drawScene = function (gl) {
   Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
   gl.uniform1i(this.flatShader.uSampler, 0);
 	drawObject(gl, Game.scene.groundObj, [0.3, 0.7, 0.2, 1.0], this.flatShader);
-
-  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
+  gl.uniform1i(this.flatShader.uSampler, 1);
  	drawObject(gl, Game.scene.trackObj, [0.9, 0.8, 0.7, 1.0], this.flatShader);
+  
+  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
 	for (var i in Game.scene.buildingsObj) 
 		drawObject(gl, Game.scene.buildingsObj[i], [0.8, 0.8, 0.8, 1.0], this.flatShader);
   gl.useProgram(null);
@@ -275,7 +276,8 @@ Renderer.setupAndStart = function () {
 
   /* create the shader */
   Renderer.flatShader = new flatShader(Renderer.gl);
-  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png");
+  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png", Renderer.gl.TEXTURE0);
+  loadTexture(Renderer.gl, "./../common/textures/street4.png", Renderer.gl.TEXTURE1);
   
   /* add listeners for the mouse / keyboard events */
   Renderer.canvas.addEventListener('mousemove',on_mouseMove,false);

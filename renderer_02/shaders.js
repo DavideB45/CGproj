@@ -140,7 +140,7 @@ flatShader = function (gl) {
       return uColor;
     } else {
       //return vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0);
-      return texture2D(uSampler, vTexCoord*5.0);
+      return texture2D(uSampler, vTexCoord);
     }
   }
   `;
