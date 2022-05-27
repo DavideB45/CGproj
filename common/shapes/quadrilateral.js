@@ -1,5 +1,5 @@
 function Quadrilateral(quad,scale) {
-
+	if(typeof scale === 'undefined') scale = 1;
 	var nv = 4;
 	this.vertices = new Float32Array(nv  * 3);
 	for(var i = 0; i < nv*3;++i){
