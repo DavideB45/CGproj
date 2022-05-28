@@ -130,7 +130,12 @@ Game = {
 
 	Game.scene.buildingsObj  = new Array(Game.scene.buildings.length);
 	Game.scene.buildingsObjTex  = new Array(Game.scene.buildings.length);
-	for (var i = 0; i < Game.scene.buildings.length; ++i){  
+	  
+	Game.scene.buildingsObj[0] = new BuildingMaker(Game.scene.buildings[0]);
+	Game.scene.buildingsObjTex[0] = new BuildingMaker_texCoordsFacades(Game.scene.buildings[0],0.08);
+	Game.scene.buildingsObjTex[0].roof = new BuildingMaker_texCoordsRoof(Game.scene.buildings[0],1.0);
+
+	for (var i = 1; i < Game.scene.buildings.length; ++i){  
 		Game.scene.buildingsObj[i] = new BuildingMaker(Game.scene.buildings[i]);
 		Game.scene.buildingsObjTex[i] = new BuildingMaker_texCoordsFacades(Game.scene.buildings[i],0.1);
 		Game.scene.buildingsObjTex[i].roof = new BuildingMaker_texCoordsRoof(Game.scene.buildings[i],1.0);

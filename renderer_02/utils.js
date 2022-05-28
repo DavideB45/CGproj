@@ -51,7 +51,7 @@ drawObject = function (gl, obj, fillColor, usedShader) {
     if (obj.normalBuffer != undefined) {
         gl.disableVertexAttribArray(usedShader.aNormalIndex);
     }
-    if(obj.texCoords != undefined){
+    if(obj.texBuffer != undefined){
         gl.disableVertexAttribArray(usedShader.aTexCoordIndex);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -87,6 +87,17 @@ loadOnGPU = function( jsonMesh , gl) {
        new Uint16Array(jsonMesh.connectivity[0].indices), 
        gl.STATIC_DRAW
     );
+
+    if(jsonMesh.vertices[2] != undefined){
+        gpuMesh.texBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, gpuMesh.texBuffer );
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(jsonMesh.vertices[2].values),
+            gl.STATIC_DRAW
+        );
+    }
+
  
    gpuMesh.triangleIndices  = jsonMesh.connectivity[0].indices ; 
   
@@ -105,7 +116,7 @@ loadTexture = function(gl, path, textureSlot){
     var img = new Image();
 	img.src = path;
 	img.addEventListener('load', function(){
-        Renderer.gl.activeTexture(textureSlot);
+        gl.activeTexture(textureSlot);
 		var texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		//               cos'è      mipmap lev   originale  in GPU    tipo di dato    immagine

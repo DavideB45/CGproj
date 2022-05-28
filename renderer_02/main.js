@@ -24,7 +24,9 @@ Renderer.initializeObjects = function (gl) {
   this.car = Game.addCar("mycar");
 
   Renderer.carWheel = loadOnGPU(wheel, gl);// crea la ruota
-  Renderer.carBody = loadOnGPU(police, gl);
+  Renderer.carBody = loadOnGPU(police, gl);// crea la carrozza
+  //loadTexture(gl, "./../common/textures/police.png", Renderer.gl.TEXTURE5);
+  //Renderer.carBody.texture = 5;
 
   // to check light 
   Renderer.sphere = loadOnGPU(sphere, gl);
@@ -32,10 +34,26 @@ Renderer.initializeObjects = function (gl) {
   Renderer.lamp = loadOnGPU(lamp, gl);
 
   createObjectBuffers(gl,Game.scene.trackObj);// la pista
+  loadTexture(Renderer.gl, "./../common/textures/street4.png", Renderer.gl.TEXTURE0);
+  Game.scene.trackObj.texture = 0;
   createObjectBuffers(gl,Game.scene.groundObj);// il pavimento
+  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png", Renderer.gl.TEXTURE1);
+  Game.scene.groundObj.texture = 1;
 
-  for (var i = 0; i < Game.scene.buildings.length; ++i) // il resto della
-	  createObjectBuffers(gl,Game.scene.buildingsObj[i]);// scena
+  createObjectBuffers(gl,Game.scene.buildingsObjTex[0]);// il primo edificio
+  loadTexture(Renderer.gl, "./../common/textures/facade1.jpg", Renderer.gl.TEXTURE2);
+  Game.scene.buildingsObjTex[0].texture = 2;
+  createObjectBuffers(gl,Game.scene.buildingsObjTex[0].roof);// il primo tetto
+  loadTexture(Renderer.gl, "./../common/textures/roof.jpg", Renderer.gl.TEXTURE3);
+  Game.scene.buildingsObjTex[0].roof.texture = 3;
+
+  loadTexture(Renderer.gl, "./../common/textures/facade3.jpg", Renderer.gl.TEXTURE4);
+  for (var i = 1; i < Game.scene.buildings.length; ++i){ // gli altri edifici
+	  createObjectBuffers(gl,Game.scene.buildingsObjTex[i]);// dividere gli edifici in due parti
+    Game.scene.buildingsObjTex[i].texture = 4;
+    createObjectBuffers(gl,Game.scene.buildingsObjTex[i].roof);// il tetto
+    Game.scene.buildingsObjTex[i].roof.texture = 3;
+  }
 
 };
 
@@ -59,7 +77,10 @@ Renderer.drawCar = function (stack, gl) {
   stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(), [0.55, 0.55, 0.55] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
   gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
-  drawObject(gl, Renderer.carBody, [0.0, 0.7, 0.5, 1], this.flatShader);
+  //Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
+  //gl.uniform1i(this.flatShader.uSampler, Renderer.carBody.texture);
+  drawObject(gl, Renderer.carBody, [0.0, 0.8, 0.4, 1], this.flatShader);
+  //Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
   stack.pop();
 
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
@@ -235,14 +256,22 @@ Renderer.drawScene = function (gl) {
   // drawing the static elements (ground, track and buldings)
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
   Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
-  gl.uniform1i(this.flatShader.uSampler, 0);
-	drawObject(gl, Game.scene.groundObj, [0.3, 0.7, 0.2, 1.0], this.flatShader);
-  gl.uniform1i(this.flatShader.uSampler, 1);
- 	drawObject(gl, Game.scene.trackObj, [0.9, 0.8, 0.7, 1.0], this.flatShader);
   
-  Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
-	for (var i in Game.scene.buildingsObj) 
-		drawObject(gl, Game.scene.buildingsObj[i], [0.8, 0.8, 0.8, 1.0], this.flatShader);
+  gl.uniform1i(this.flatShader.uSampler, Game.scene.groundObj.texture);//ground
+	drawObject(gl, Game.scene.groundObj, [0.3, 0.7, 0.2, 1.0], this.flatShader);
+
+  gl.uniform1i(this.flatShader.uSampler, Game.scene.trackObj.texture);//track
+  drawObject(gl, Game.scene.trackObj, [0.9, 0.8, 0.7, 1.0], this.flatShader);
+  
+  gl.uniform1i(this.flatShader.uSampler, Game.scene.buildingsObjTex[0].texture);//buildings
+  drawObject(gl, Game.scene.buildingsObjTex[0], [0.9, 0.8, 0.7, 1.0], this.flatShader);
+
+  for (var i = 0; i < Game.scene.buildings.length; ++i){ //buildings
+    gl.uniform1i(this.flatShader.uSampler, Game.scene.buildingsObjTex[i].texture);
+		drawObject(gl, Game.scene.buildingsObjTex[i], [0.8, 0.8, 0.8, 1.0], this.flatShader);
+    gl.uniform1i(this.flatShader.uSampler, Game.scene.buildingsObjTex[i].roof.texture);
+    drawObject(gl, Game.scene.buildingsObjTex[i].roof, [0.8, 0.8, 0.8, 1.0], this.flatShader);
+  }
   gl.useProgram(null);
 };
 
@@ -265,6 +294,9 @@ Renderer.setupAndStart = function () {
   /* create the matrix stack */
 	Renderer.stack = new MatrixStack();
 
+  /* create the shader */
+  Renderer.flatShader = new flatShader(Renderer.gl);
+
   /* initialize objects to be rendered */
 	Renderer.initializeObjects(Renderer.gl);
 
@@ -273,11 +305,7 @@ Renderer.setupAndStart = function () {
   Renderer.cameras[0] = new FollowFromUpCamera();
   Renderer.cameras[1] = new FollowFromBackCamera(Renderer.car);
   Renderer.currentCamera = 1;
-
-  /* create the shader */
-  Renderer.flatShader = new flatShader(Renderer.gl);
-  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png", Renderer.gl.TEXTURE0);
-  loadTexture(Renderer.gl, "./../common/textures/street4.png", Renderer.gl.TEXTURE1);
+  
   
   /* add listeners for the mouse / keyboard events */
   Renderer.canvas.addEventListener('mousemove',on_mouseMove,false);
