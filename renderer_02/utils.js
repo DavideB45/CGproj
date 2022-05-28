@@ -112,7 +112,7 @@ MultiplyMatrixVector = function (matrix, vector) {
     return out;
 }
 
-loadTexture = function(gl, path, textureSlot){
+loadTexture = function(gl, path, textureSlot, imgType){
     var img = new Image();
 	img.src = path;
 	img.addEventListener('load', function(){
@@ -120,7 +120,7 @@ loadTexture = function(gl, path, textureSlot){
 		var texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		//               cos'è      mipmap lev   originale  in GPU    tipo di dato    immagine
-		gl.texImage2D(gl.TEXTURE_2D,    0,        gl.RGB,   gl.RGB, gl.UNSIGNED_BYTE,    img   );
+		gl.texImage2D(gl.TEXTURE_2D,    0,        imgType,  imgType, gl.UNSIGNED_BYTE,    img   );
 		// parametri per il wrapping 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);

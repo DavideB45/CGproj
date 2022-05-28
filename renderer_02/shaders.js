@@ -5,6 +5,7 @@ flatShader = function (gl) {
     uniform   mat4 uViewMatrix;// matrice di vista
     uniform   mat4 uViewInverted;// inverse della matrice di vista
     uniform   mat4 uNormalMatrix;// inversa della matrice modello
+    uniform   mat4 uCarLightMatrix;// matrice di vista dalla luce del veicolo
     uniform   vec3 uLightDirection;
 
     attribute vec3 aPosition; 
@@ -17,27 +18,20 @@ flatShader = function (gl) {
     varying vec3 iNor;// normale interpolata
 
     varying vec2 vTexCoord;// coordinata texture interpolata
+    varying vec3 vTexCoordFanale;// coordinata texture interpolata del fanale
 
     void main(void)                                
     {
       vPos = (uModelMatrix*vec4(aPosition, 1.0)).xyz;
-      // ci va il model matrix? inverted view
-      //viewPos = normalize(uViewInverted*vec4(0, 0, -1, 0)).xyz;// sbagliato (giusto di giorno)
-      //viewPos = normalize(uViewMatrix*uModelMatrix*vec4(aPosition, 1)).xyz;// sbagliato 2 (sembra che la luce venga dal centro)
-      //viewPos = normalize(uViewMatrix*vec4(0, 0, -1, 0)).xyz;// sbagilato
-      //viewPos = normalize(uModelMatrix*uViewInverted*vec4(0,0,-1,0)).xyz;
-      //viewPos = normalize(uModelMatrix*vec4(normalize(uViewInverted*vec4(0,0,1,0)).xyz, 0)).xyz;
-      //viewPos = normalize(uViewInverted*vec4(aPosition, 0)).xyz;
-      //viewPos = -normalize(uModelMatrix*vec4(aPosition, 0)).xyz;
       viewPos = normalize(vPos);
-
       lDir = normalize(vec4(uLightDirection,0)).xyz;
-
-      //iNor = normalize((uNormalMatrix*vec4(aNormal, 0.0)).xyz);
       iNor = aNormal;
 
+      vTexCoordFanale = (uCarLightMatrix*uModelMatrix*vec4(aPosition,1.0)).xyz;
+
       vTexCoord = aTexCoord;
-	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);     
+	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+      //gl_Position = uProjectionMatrix * uCarLightMatrix * uModelMatrix * vec4(aPosition, 1.0);
     }                                              
   `;
 //flat Shader
@@ -62,8 +56,11 @@ flatShader = function (gl) {
   uniform int shadingMode;// 0_flat_shading  1_Phong_shading 2_no_light
   uniform int textureMode;// 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
   uniform vec4 uColor;// colore dell'oggetto
+
   uniform sampler2D uSampler;// texture dell'oggetto
+  uniform sampler2D uCarLight;// texture della luce del veicolo
   varying vec2 vTexCoord;// coordinate texture del frammento
+  varying vec3 vTexCoordFanale;// coordinata texture interpolata del fanale
 
   vec3 color_of_vector(vec3 v);
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N);
@@ -80,11 +77,14 @@ flatShader = function (gl) {
       }
 
       float kDiffuse = 0.1;
+      vec3 lDiffuse = getBaseColor().rgb;
       vec3 vDir = viewPos;
 
       if(dot(lDir, vec3(0, -1, 0)) < 0.0){
         kDiffuse = max(dot(lDir, N), 0.2);
+        lDiffuse = lDiffuse*kDiffuse*1.5;
       } else {
+        lDiffuse = lDiffuse*0.0;
         for(int i = 0; i < 12 ; i++){// prec max 12
           if(vPos.x < arrayLamp[i].position.x + 0.6 && 
             vPos.x > arrayLamp[i].position.x - 0.6 &&
@@ -93,20 +93,28 @@ flatShader = function (gl) {
             vPos.z < arrayLamp[i].position.z + 0.6 && 
             vPos.z > arrayLamp[i].position.z - 0.6){
             kDiffuse = 1.0;
+            lDiffuse = arrayLamp[i].color;
             break;
           } else{
-            kDiffuse += diffusiveL(
+            kDiffuse = diffusiveL(
               normalize(arrayLamp[i].position - vPos),
               normalize(-arrayLamp[i].direction),
               vDir,
               N
             );
+            lDiffuse += getBaseColor().rgb*kDiffuse + arrayLamp[i].color*kDiffuse*0.2;
           }
         }
-        kDiffuse += 0.25;
+        float x = vTexCoordFanale.x/1.5;
+        float y = vTexCoordFanale.y;
+        if(x > -1.0 && x < 1.0 &&
+          y > 0.0 && y < 1.0 &&
+          vTexCoordFanale.z < 0.0){
+          lDiffuse += (texture2D(uCarLight, vec2(x, y)).rgb)*pow((texture2D(uCarLight, vec2(x, y)).a), 2.0);
+          //lDiffuse = vec3(1.0, 1.0, 1.0);
+        }
       }
-      vec3 lDiffuse = (getBaseColor().xyz + vec3(0.0, 0.0, 0))*kDiffuse;
-      gl_FragColor = vec4(lDiffuse, uColor[3]);
+      gl_FragColor = vec4(lDiffuse, 1.0);
 
     } else {
       vec3 N = cross( dFdx(vPos), dFdy(vPos) );
@@ -121,10 +129,10 @@ flatShader = function (gl) {
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N){
     float cosangle = dot(liDir, lPos);
     if(cosangle < 0.2){
-      return 0.0;
+      return 0.02;
     } else {
       if(cosangle > 0.997){
-        return 0.3;
+        return 0.2;
       }
       if(dot(liDir,N) < 0.0){
         return 0.0;
@@ -186,9 +194,11 @@ flatShader = function (gl) {
   shaderProgram.uProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
   shaderProgram.uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
   shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
+  shaderProgram.uCarLight = gl.getUniformLocation(shaderProgram, "uCarLight");
   shaderProgram.shadingMode = gl.getUniformLocation(shaderProgram, "shadingMode");
   shaderProgram.textureMode = gl.getUniformLocation(shaderProgram, "textureMode")
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
+  shaderProgram.uCarLigthMatrixLocation = gl.getUniformLocation(shaderProgram, "uCarLightMatrix");
   shaderProgram.uLightDirection = gl.getUniformLocation(shaderProgram, "uLightDirection");
   shaderProgram.uViewInvertedLocation = gl.getUniformLocation(shaderProgram, "uViewInverted");
   shaderProgram.uNormalMatrixLocation = gl.getUniformLocation(shaderProgram, "uNormalMatrix");

@@ -23,6 +23,8 @@ Renderer.initializeObjects = function (gl) {
   Game.setScene(scene_0);
   this.car = Game.addCar("mycar");
 
+  loadTexture(Renderer.gl, "./../common/textures/headlight.png", Renderer.gl.TEXTURE5, gl.RGBA);
+
   Renderer.carWheel = loadOnGPU(wheel, gl);// crea la ruota
   Renderer.carBody = loadOnGPU(police, gl);// crea la carrozza
   //loadTexture(gl, "./../common/textures/police.png", Renderer.gl.TEXTURE5);
@@ -34,20 +36,20 @@ Renderer.initializeObjects = function (gl) {
   Renderer.lamp = loadOnGPU(lamp, gl);
 
   createObjectBuffers(gl,Game.scene.trackObj);// la pista
-  loadTexture(Renderer.gl, "./../common/textures/street4.png", Renderer.gl.TEXTURE0);
+  loadTexture(Renderer.gl, "./../common/textures/street4.png", Renderer.gl.TEXTURE0, gl.RGB);
   Game.scene.trackObj.texture = 0;
   createObjectBuffers(gl,Game.scene.groundObj);// il pavimento
-  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png", Renderer.gl.TEXTURE1);
+  loadTexture(Renderer.gl, "./../common/textures/grass_tile.png", Renderer.gl.TEXTURE1, gl.RGB);
   Game.scene.groundObj.texture = 1;
 
   createObjectBuffers(gl,Game.scene.buildingsObjTex[0]);// il primo edificio
-  loadTexture(Renderer.gl, "./../common/textures/facade1.jpg", Renderer.gl.TEXTURE2);
+  loadTexture(Renderer.gl, "./../common/textures/facade1.jpg", Renderer.gl.TEXTURE2, gl.RGB);
   Game.scene.buildingsObjTex[0].texture = 2;
   createObjectBuffers(gl,Game.scene.buildingsObjTex[0].roof);// il primo tetto
-  loadTexture(Renderer.gl, "./../common/textures/roof.jpg", Renderer.gl.TEXTURE3);
+  loadTexture(Renderer.gl, "./../common/textures/roof.jpg", Renderer.gl.TEXTURE3, gl.RGB);
   Game.scene.buildingsObjTex[0].roof.texture = 3;
 
-  loadTexture(Renderer.gl, "./../common/textures/facade3.jpg", Renderer.gl.TEXTURE4);
+  loadTexture(Renderer.gl, "./../common/textures/facade3.jpg", Renderer.gl.TEXTURE4, gl.RGB);
   for (var i = 1; i < Game.scene.buildings.length; ++i){ // gli altri edifici
 	  createObjectBuffers(gl,Game.scene.buildingsObjTex[i]);// dividere gli edifici in due parti
     Game.scene.buildingsObjTex[i].texture = 4;
@@ -224,6 +226,7 @@ Renderer.drawScene = function (gl) {
 
 
   gl.useProgram(this.flatShader);
+  gl.uniform1i(this.flatShader.uCarLight, 5);
   if(day_mode == 0){
     Renderer.gl.uniform3fv(this.flatShader.uLightDirection, Game.scene.weather.sunLightDirection);  
   } else if(day_mode == 1){
@@ -238,6 +241,7 @@ Renderer.drawScene = function (gl) {
   Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
   var invV = Renderer.cameras[Renderer.currentCamera].matrix();
   gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, invV);
+  gl.uniformMatrix4fv(this.flatShader.uCarLigthMatrixLocation, false,Renderer.cameras[Renderer.fanale].matrix());
   gl.uniformMatrix4fv(this.flatShader.uViewInvertedLocation, false, glMatrix.mat4.invert(glMatrix.mat4.create(), invV));
   
   // initialize the stack with the identity
@@ -304,6 +308,8 @@ Renderer.setupAndStart = function () {
   Renderer.cameras = [];
   Renderer.cameras[0] = new FollowFromUpCamera();
   Renderer.cameras[1] = new FollowFromBackCamera(Renderer.car);
+  Renderer.cameras[2] = new Fanale(Renderer.car);
+  Renderer.fanale = 2;
   Renderer.currentCamera = 1;
   
   
