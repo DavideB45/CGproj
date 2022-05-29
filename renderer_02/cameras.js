@@ -58,7 +58,7 @@ Fanale = function(carObj){
     this.matrix = function(){
         glMatrix.mat4.lookAt(this.view,
             MultiplyMatrixVector(this.toWord, [0,   0.5,  -1.2]),// occhio (0,  -0.04,  -1.2)
-            MultiplyMatrixVector(this.toWord, [0, -0.7, -3]), // centro (0.0, -0.02, -1.5)
+            MultiplyMatrixVector(this.toWord, [0, -0.2 , -3]), // centro (0.0, -0.02, -1.5)
             [0,  1,  0]);// up
         return glMatrix.mat4.mul(
             this.view, 

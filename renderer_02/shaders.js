@@ -104,14 +104,19 @@ flatShader = function (gl) {
             );
             lDiffuse += getBaseColor().rgb*kDiffuse + arrayLamp[i].color*kDiffuse*0.2;
           }
-        }
-        float x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.5;
+        }                    //portare in spazio texture    //ruota   //trasla
+        float x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.7 + 0.5/vTexCoordFanale.w;
         float y = (vTexCoordFanale.y/vTexCoordFanale.w)/2.0 + 0.5;
         if(x > 0.0 && x < 1.0 &&
           y > 0.0 && y < 1.0 &&
+          vTexCoordFanale.w > 0.0){                                    //riduci ai bordi               //riduci con la distanza
+          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 3.0)/vTexCoordFanale.w;
+        }
+        x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.3 - 0.5/vTexCoordFanale.w;
+        if(x > 0.0 && x < 1.0 &&
+          y > 0.0 && y < 1.0 &&
           vTexCoordFanale.w > 0.0){
-          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0);
-          //lDiffuse = vec3(vTexCoordFanale.x, vTexCoordFanale.y, 0.0);
+          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0)/vTexCoordFanale.w;
         }
       }
       gl_FragColor = vec4(lDiffuse, 1.0);
