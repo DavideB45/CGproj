@@ -1,17 +1,12 @@
-/*
-the FollowFromUpCamera always look at the car from a position abova right over the car
-*/
+/* the FollowFromUpCamera always look at the car from a position abova right over the car */
 FollowFromUpCamera = function(){
-
-/* the only data it needs is the position of the camera */
+    /* the only data it needs is the position of the camera */
     this.pos = [0,0,0];
-
-/* update the camera with the current car position */
+    /* update the camera with the current car position */
     this.update = function(car_position, _other){
         this.pos = car_position;
     }
-
-/* return the transformation matrix to transform from worlod coordiantes to the view reference frame */
+    /* return the transformation matrix to transform from worlod coordiantes to the view reference frame */
     this.matrix = function(){
         return glMatrix.mat4.lookAt(glMatrix.mat4.create(),
         [ this.pos[0],this.pos[1]+22, this.pos[2]], 

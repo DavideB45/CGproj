@@ -214,6 +214,7 @@ Renderer.drawScene = function (gl) {
   Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
   var invV = Renderer.cameras[Renderer.currentCamera].matrix();
   gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, invV);
+  gl.uniform3fv(this.flatShader.uViewPosition, Renderer.cameras[Renderer.currentCamera].eye);
   gl.uniformMatrix4fv(this.flatShader.uViewInvertedLocation, false, glMatrix.mat4.invert(glMatrix.mat4.create(), invV));
   
   // initialize the stack with the identity
