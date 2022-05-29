@@ -18,7 +18,7 @@ flatShader = function (gl) {
     varying vec3 iNor;// normale interpolata
 
     varying vec2 vTexCoord;// coordinata texture interpolata
-    varying vec3 vTexCoordFanale;// coordinata texture interpolata del fanale
+    varying vec4 vTexCoordFanale;// coordinata texture interpolata del fanale
 
     void main(void)                                
     {
@@ -27,11 +27,11 @@ flatShader = function (gl) {
       lDir = normalize(vec4(uLightDirection,0)).xyz;
       iNor = aNormal;
 
-      vTexCoordFanale = (uCarLightMatrix*uModelMatrix*vec4(aPosition,1.0)).xyz;
+      vTexCoordFanale = (uCarLightMatrix*uModelMatrix*vec4(aPosition,1.0));
 
       vTexCoord = aTexCoord;
 	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
-      //gl_Position = uProjectionMatrix * uCarLightMatrix * uModelMatrix * vec4(aPosition, 1.0);
+      //gl_Position = uCarLightMatrix * uModelMatrix * vec4(aPosition, 1.0);
     }                                              
   `;
 //flat Shader
@@ -60,7 +60,7 @@ flatShader = function (gl) {
   uniform sampler2D uSampler;// texture dell'oggetto
   uniform sampler2D uCarLight;// texture della luce del veicolo
   varying vec2 vTexCoord;// coordinate texture del frammento
-  varying vec3 vTexCoordFanale;// coordinata texture interpolata del fanale
+  varying vec4 vTexCoordFanale;// coordinata texture interpolata del fanale
 
   vec3 color_of_vector(vec3 v);
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N);
@@ -105,13 +105,13 @@ flatShader = function (gl) {
             lDiffuse += getBaseColor().rgb*kDiffuse + arrayLamp[i].color*kDiffuse*0.2;
           }
         }
-        float x = vTexCoordFanale.x/1.5;
-        float y = vTexCoordFanale.y;
-        if(x > -1.0 && x < 1.0 &&
+        float x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.5;
+        float y = (vTexCoordFanale.y/vTexCoordFanale.w)/2.0 + 0.5;
+        if(x > 0.0 && x < 1.0 &&
           y > 0.0 && y < 1.0 &&
-          vTexCoordFanale.z < 0.0){
-          lDiffuse += (texture2D(uCarLight, vec2(x, y)).rgb)*pow((texture2D(uCarLight, vec2(x, y)).a), 2.0);
-          //lDiffuse = vec3(1.0, 1.0, 1.0);
+          vTexCoordFanale.w > 0.0){
+          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0);
+          //lDiffuse = vec3(vTexCoordFanale.x, vTexCoordFanale.y, 0.0);
         }
       }
       gl_FragColor = vec4(lDiffuse, 1.0);
