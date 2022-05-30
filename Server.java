@@ -49,7 +49,7 @@ public class Server {
                 // ceck thge position of the file
                 File toSend;
                 if (!request.contains("common")) {
-                    toSend = new File("./renderer_02" + request.split(" ")[1]);
+                    toSend = new File("./renderer_03" + request.split(" ")[1]);
                 } else {
                     toSend = new File("." + request.split(" ")[1]);
                 }
