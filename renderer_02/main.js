@@ -2,7 +2,19 @@
 var Renderer = new Object();
 
 Renderer.fillArrayLamp = function(){
-  for(i = 0; i < this.flatShader.maxSpotlight && i < Game.scene.lamps.length; i++){
+  this.gl.uniform3fv(
+    this.flatShader.spotlightPos[0], 
+    [Game.scene.lamps[0].position[0], 5, Game.scene.lamps[0].position[2]]
+  );
+  this.gl.uniform3fv(
+    this.flatShader.spotlightCol[0], 
+    [1, 0, 1]
+  );
+  this.gl.uniform3fv(
+    this.flatShader.spotlightDir[0],
+    [0,-1,0]
+  )
+  for(i = 1; i < this.flatShader.maxSpotlight && i < Game.scene.lamps.length; i++){
     this.gl.uniform3fv(
       this.flatShader.spotlightPos[i], 
       [Game.scene.lamps[i].position[0], 5, Game.scene.lamps[i].position[2]]
@@ -78,7 +90,6 @@ Renderer.drawCar = function (stack, gl) {
   //stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(), [0.5, 0.25, 1] ));
   stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(), [0.55, 0.55, 0.55] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   //Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
   //gl.uniform1i(this.flatShader.uSampler, Renderer.carBody.texture);
   drawObject(gl, Renderer.carBody, [0.0, 0.8, 0.4, 1], this.flatShader);
@@ -94,7 +105,6 @@ Renderer.drawCar = function (stack, gl) {
   stack.multiply(wheelRotationX);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [0, -0.36, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.carWheel, [0, 0, 0, 1], this.flatShader);
   stack.pop();
 
@@ -104,7 +114,6 @@ Renderer.drawCar = function (stack, gl) {
   stack.multiply(wheelRotationX);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [0, -0.36, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.carWheel, [0, 0, 0, 1], this.flatShader);
   stack.pop();
 
@@ -115,7 +124,6 @@ Renderer.drawCar = function (stack, gl) {
   stack.multiply(wheelRotationX);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [0, -0.36, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.carWheel, [0, 0, 0, 1], this.flatShader);
   stack.pop();
 
@@ -125,7 +133,6 @@ Renderer.drawCar = function (stack, gl) {
   stack.multiply(wheelRotationX);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [0, -0.36, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.carWheel, [0, 0, 0, 1], this.flatShader);
   stack.pop();
 
@@ -138,14 +145,12 @@ Renderer.drawSpheres = function (gl, stack){
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 3);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[0, 0, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [1, 0, 0, 1], this.flatShader);
   
   stack.push();
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[2.5, 0, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [0, 1, 0, 1], this.flatShader);
   stack.pop();
 
@@ -153,7 +158,6 @@ Renderer.drawSpheres = function (gl, stack){
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[-2.5, 0, 0] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [0, 0, 1, 1], this.flatShader);
   stack.pop();
 
@@ -161,7 +165,6 @@ Renderer.drawSpheres = function (gl, stack){
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[0, 0, 15] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [1, 1, 0, 1], this.flatShader);
   stack.pop();
 
@@ -169,7 +172,6 @@ Renderer.drawSpheres = function (gl, stack){
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[0, 0, 30] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [0, 1, 1, 1], this.flatShader);
   stack.pop();
 
@@ -177,7 +179,6 @@ Renderer.drawSpheres = function (gl, stack){
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
   stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[10, 0, 30] ));
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
   drawObject(gl, Renderer.sphere, [0, 0, 1, 1], this.flatShader);
   stack.pop();
 
@@ -192,7 +193,6 @@ Renderer.drawLamps = function(gl, stack){
       stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(),[0.5, 0.5, 0.5] ));
       Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
       gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-      gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
       drawObject(gl, Renderer.lamp, [0.2, 0.8, 0.7, 1.0], this.flatShader);
     stack.pop();
     stack.push();// lampadina
@@ -202,7 +202,6 @@ Renderer.drawLamps = function(gl, stack){
         stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(),[0.2, 0.2, 0.2] ));
       Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
       gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-      gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
       drawObject(gl, Renderer.sphere, [1, 1, 0, 1], this.flatShader);
     stack.pop();
   }
@@ -239,10 +238,9 @@ Renderer.drawScene = function (gl) {
 
   gl.uniformMatrix4fv(this.flatShader.uProjectionMatrixLocation,false,glMatrix.mat4.perspective(glMatrix.mat4.create(),3.14 / 4, ratio, 1, 500));
   Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
-  var invV = Renderer.cameras[Renderer.currentCamera].matrix();
-  gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, invV);
+  gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, Renderer.cameras[Renderer.currentCamera].matrix());
+  gl.uniform3fv(this.flatShader.uViewPosition, Renderer.cameras[Renderer.currentCamera].eye);
   gl.uniformMatrix4fv(this.flatShader.uCarLigthMatrixLocation, false,Renderer.cameras[Renderer.fanale].matrix());
-  gl.uniformMatrix4fv(this.flatShader.uViewInvertedLocation, false, glMatrix.mat4.invert(glMatrix.mat4.create(), invV));
   
   // initialize the stack with the identity
   stack.loadIdentity();
@@ -255,7 +253,6 @@ Renderer.drawScene = function (gl) {
   this.drawLamps(gl, stack);
 
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-  gl.uniformMatrix4fv(this.flatShader.uNormalMatrixLocation, false, glMatrix.mat4.transpose(glMatrix.mat4.create(), glMatrix.mat4.invert(glMatrix.mat4.create(), stack.matrix)));
 
   // drawing the static elements (ground, track and buldings)
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);

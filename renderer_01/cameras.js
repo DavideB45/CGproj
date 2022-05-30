@@ -26,6 +26,7 @@ FollowFromBackCamera = function(carObj){
     this.toWord = carObj.frame;
     this.view = glMatrix.mat4.create();
     this.eye = [0,0,0];
+    this.center = [0,0,0];
     this.smallRot = glMatrix.mat4.create();
 
     this.update = function(_car_position, wheelRor){

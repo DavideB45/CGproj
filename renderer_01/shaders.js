@@ -3,27 +3,19 @@ flatShader = function (gl) {
     uniform   mat4 uModelMatrix;// matrice per portare l'oggetto nel mondo            
     uniform   mat4 uProjectionMatrix;// matrice per proiettare sullo schermo
     uniform   mat4 uViewMatrix;// matrice di vista
-    uniform   mat4 uViewInverted;// inverse della matrice di vista
-    uniform   mat4 uNormalMatrix;// inversa della matrice modello
-    uniform   vec3 uViewPosition;// posizione della camera
     uniform   vec3 uLightDirection;
 
     attribute vec3 aPosition; 
     attribute vec3 aNormal;
 
     varying vec3 vPos;// posizione del vertice
-    varying vec3 viewDir;// Direzione di vista
-    varying vec3 lDir;
-
-    varying vec3 iNor;
+    varying vec3 lDir;// direzione della luce
+    varying vec3 iNor;// normale interpolata
 
     void main(void)                                
     {
-      //viewDir = normalize( punto_di_vista_in_world_space -uModelMatrix*vec4(aPosition, 0)).xyz; 
       vPos = (uModelMatrix*vec4(aPosition, 1.0)).xyz;
-      viewDir = normalize(vec4(uViewPosition, 1.0)-(uModelMatrix*vec4(aPosition, 1.0))).xyz;
-      lDir = normalize(uLightDirection).xyz;
-
+      lDir = normalize(uLightDirection);
       iNor = aNormal;
 
 	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);     
@@ -43,20 +35,21 @@ flatShader = function (gl) {
   uniform int n_spotlight;
   uniform spotlight arrayLamp[ARR_MAX_LEN];
 
+  uniform vec4 uColor;// colore del frammento
+  uniform int shadingMode;// 0 = flat, 1 = phong, 2 = normal
+
   uniform vec3 uViewPosition;// posizione della camera
   varying vec3 vPos;// fragment pos
-  varying vec3 viewDir;// view direction
   varying vec3 lDir;// light direction
-
   varying vec3 iNor;// interpolated normal
 
-  uniform int shadingMode;
-  uniform vec4 uColor;
 
   // transform a vector in a vector of RGB
   vec3 color_of_vector(vec3 v);
+
   // compute the specular component
-  float specularL(vec3 lDir, vec3 lPos, vec3 vieDir, vec3 N);
+  float specularL(vec3 lDir, vec3 lPos, vec3 viewDir, vec3 N);
+
   // compute the diffusive component
   float diffusiveL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N);
 
@@ -71,7 +64,6 @@ flatShader = function (gl) {
 
       float kDiffuse = 0.1;
       float kSpec = 0.0;
-      //vec3 vDir = viewDir;
       vec3 vDir = normalize(uViewPosition-vPos);
 
       if(dot(lDir, vec3(0, -1, 0)) < 0.0){
@@ -79,7 +71,7 @@ flatShader = function (gl) {
         kSpec = max(0.0, pow(dot(vDir, R), 29.0));
         kDiffuse = max(dot(lDir, N), 0.2);
       } else {
-        for(int i = 0; i < 12 ; i++){// prec max 12
+        for(int i = 0; i < 12 ; i++){
           if(vPos.x < arrayLamp[i].position.x + 0.6 && 
             vPos.x > arrayLamp[i].position.x - 0.6 &&
             vPos.y < arrayLamp[i].position.y - 0.2 && 
@@ -123,7 +115,7 @@ flatShader = function (gl) {
     return normalize(v)*0.5 + vec3(0.5);
   }
 
-  float specularL(vec3 liDir, vec3 lPos, vec3 vieDir, vec3 N){
+  float specularL(vec3 liDir, vec3 lPos, vec3 viewDir, vec3 N){
     float cosangle = dot(liDir, lPos);
     if(cosangle < 0.2){
       return 0.0;
@@ -132,7 +124,7 @@ flatShader = function (gl) {
         return 0.3;
       }
       vec3 R = -liDir + 2.0*dot(liDir, N)*N;
-      float pick = max(0.0, pow(dot(vieDir, R), 233.0));
+      float pick = max(0.0, pow(dot(viewDir, R), 233.0));
       if(pick < -10.0){
         return 0.0;
       }
@@ -200,8 +192,6 @@ flatShader = function (gl) {
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
   shaderProgram.uViewPosition = gl.getUniformLocation(shaderProgram, "uViewPosition");
   shaderProgram.uLightDirection = gl.getUniformLocation(shaderProgram, "uLightDirection");
-  shaderProgram.uViewInvertedLocation = gl.getUniformLocation(shaderProgram, "uViewInverted");
-  shaderProgram.uNormalMatrixLocation = gl.getUniformLocation(shaderProgram, "uNormalMatrix");
 
   shaderProgram.n_spotlight = gl.getUniformLocation(shaderProgram, "n_spotlight");
   shaderProgram.maxSpotlight = 20;
