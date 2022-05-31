@@ -35,8 +35,12 @@ Renderer.initializeObjects = function (gl) {
   Game.setScene(scene_0);
   this.car = Game.addCar("mycar");
 
+  Renderer.cube = new Cube();
+  createObjectBuffers(gl, Renderer.cube);
+  Renderer.cubemapDay = loadCubemap(Renderer.gl.TEXTURE6, gl, "negx.jpg", "posy.jpg");
   loadTexture(Renderer.gl, "./../common/textures/headlight.png", Renderer.gl.TEXTURE5, gl.RGBA);
-
+  
+  
   Renderer.carWheel = loadOnGPU(wheel, gl);// crea la ruota
   Renderer.carBody = loadOnGPU(police, gl);// crea la carrozza
  
@@ -66,6 +70,8 @@ Renderer.initializeObjects = function (gl) {
     createObjectBuffers(gl,Game.scene.buildingsObjTex[i].roof);// il tetto
     Game.scene.buildingsObjTex[i].roof.texture = 3;
   }
+
+
   
 };
 
@@ -204,13 +210,25 @@ Renderer.drawScene = function (gl) {
   var stack = new MatrixStack();
 
   gl.viewport(0, 0, width, height);
-  gl.enable(gl.DEPTH_TEST);
+
   // Clear the framebuffer
-  gl.clearColor(0.34, 0.5, 0.74, 1.0);
+  gl.clearColor(0.2, 0.2, 0.34, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  
+  gl.enable(gl.DEPTH_TEST);
+  if(day_mode != 1){
+    drawSkybox(gl, 
+      Renderer.skyboxShader,
+      Renderer.cameras[Renderer.currentCamera].matrix(),
+      glMatrix.mat4.perspective(glMatrix.mat4.create(),3.14 / 4, ratio, 0.1, 50),
+      Renderer.cubemapDay,
+      Renderer.cube,
+      6
+    );
+  }
 
   gl.useProgram(this.flatShader);
-  gl.uniform1i(this.flatShader.uShadowMap, 7);
+  gl.uniform1i(this.flatShader.uShadowMap, Renderer.shadowTexture);
   gl.uniform1i(this.flatShader.uCarLight, 5);
   if(day_mode == 0){
     Renderer.gl.uniform3fv(this.flatShader.uLightDirection, Game.scene.weather.sunLightDirection);  
@@ -233,10 +251,13 @@ Renderer.drawScene = function (gl) {
   stack.loadIdentity();
 
   // drawing the car
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 1.5);
   this.drawCar(stack, gl);
 
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 1.0);
   this.drawSpheres(gl, stack);
 
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 0.8);
   this.drawLamps(gl, stack);
 
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
@@ -244,14 +265,18 @@ Renderer.drawScene = function (gl) {
   // drawing the static elements (ground, track and buldings)
   Renderer.gl.uniform1i(this.flatShader.shadingMode, -1);
   
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 1.0);
   gl.uniform1i(this.flatShader.uSampler, Game.scene.trackObj.texture);//track
   drawObject(gl, Game.scene.trackObj, [0.7, 0.6, 0.5, 1.0], this.flatShader);
 
   Renderer.gl.uniform1i(this.flatShader.shadingMode, 0);
   Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
+
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 0.0);
   gl.uniform1i(this.flatShader.uSampler, Game.scene.groundObj.texture);//ground
 	drawObject(gl, Game.scene.groundObj, [0.3, 0.7, 0.2, 1.0], this.flatShader);
   
+  Renderer.gl.uniform1f(this.flatShader.glowLevel, 0.2);
   gl.uniform1i(this.flatShader.uSampler, Game.scene.buildingsObjTex[0].texture);//buildings
   drawObject(gl, Game.scene.buildingsObjTex[0], [0.9, 0.8, 0.7, 1.0], this.flatShader);
 
@@ -286,6 +311,7 @@ Renderer.setupAndStart = function () {
   /* create the shader */
   Renderer.flatShader = new flatShader(Renderer.gl);
   Renderer.shadowShader = new shadowShader(Renderer.gl);
+  Renderer.skyboxShader = new cubeShader(Renderer.gl);
 
   /* initialize objects to be rendered */
 	Renderer.initializeObjects(Renderer.gl);

@@ -47,6 +47,7 @@ flatShader = function (gl) {
   uniform vec4 uColor;// colore dell'oggetto
   uniform int shadingMode;// -1_use_texture 0_flat_shading  1_Phong_shading 2_no_light
   uniform int textureMode;// 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
+  uniform float glowLevel;// between 0 and 1
   
   uniform vec3 uViewPosition;// posizione della camera
   uniform vec3 uLightPosition;// posizione della luce
@@ -138,7 +139,7 @@ flatShader = function (gl) {
             lDiffuse += lightContribution*(texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0)/vTexCoordFanale.w;
         }
       }
-      gl_FragColor = vec4(lDiffuse + lSpecular, 1.0);
+      gl_FragColor = vec4(lDiffuse + lSpecular*glowLevel, 1.0);
       //gl_FragColor = vec4(color_of_vector(N), 1.0);
     
     } else {
@@ -184,13 +185,13 @@ flatShader = function (gl) {
     }
   }
 
-  //textureMode :: 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
+  //textureMode :: 0_no_texture 1_use_texture_basic
   vec4 getBaseColor(){
-    if(textureMode == 0){
-      return uColor;
-    } else {
+    if(textureMode == 1){
       //return vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0);
       return texture2D(uSampler, vec2(vTexCoord.x, vTexCoord.y));
+    } else {
+      return uColor;
     }
   }
   `;
@@ -242,6 +243,7 @@ flatShader = function (gl) {
   shaderProgram.textureMode = gl.getUniformLocation(shaderProgram, "textureMode")
   
   shaderProgram.shadingMode = gl.getUniformLocation(shaderProgram, "shadingMode");
+  shaderProgram.glowLevel = gl.getUniformLocation(shaderProgram, "glowLevel");
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
   shaderProgram.uViewPosition = gl.getUniformLocation(shaderProgram, "uViewPosition");
   shaderProgram.uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
