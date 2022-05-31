@@ -107,19 +107,54 @@ FreeCamera = function(){
 Fanale = function(carObj){
     this.toWord = carObj.frame;
     this.view = glMatrix.mat4.create();
+    this.eye = [0,0,0];
+    this.center = [0,0,0];
 
     this.update = function(_car_position, wheelRor){
+        this.eye = MultiplyMatrixVector(this.toWord, [0, 0.5, -1.2]);
+        this.center = MultiplyMatrixVector(this.toWord, [0, -0.2, -3]);
         return;
     }
 
     this.matrix = function(){
         glMatrix.mat4.lookAt(this.view,
-            MultiplyMatrixVector(this.toWord, [0,   0.5,  -1.2]),// occhio (0,  -0.04,  -1.2)
-            MultiplyMatrixVector(this.toWord, [0, -0.2 , -3]), // centro (0.0, -0.02, -1.5)
+            this.eye,
+            this.center,
             [0,  1,  0]);// up
         return glMatrix.mat4.mul(
             this.view, 
-            glMatrix.mat4.perspective(glMatrix.mat4.create(), 45.1, 1, 0.1, 10), 
+            glMatrix.mat4.perspective(glMatrix.mat4.create(), 45.1, 1, 0.1, 40), 
             this.view);
     }
+}
+
+Sole = function(currentCamera, sunLightDirection){
+    this.center = currentCamera.center;
+    this.eye = [currentCamera.center[0] + sunLightDirection[0]*10, 
+        currentCamera.center[1] + sunLightDirection[1]*10, 
+        currentCamera.center[2] + sunLightDirection[2]*10];
+    this.up = [0, 0, 1];
+    
+    this.update = function(currentCamera, sunLightDirection){
+        this.eye = [currentCamera.center[0] + sunLightDirection[0]*20, 
+            currentCamera.center[1] + sunLightDirection[1]*20, 
+            currentCamera.center[2] + sunLightDirection[2]*20];
+        this.center = currentCamera.center;
+        this.up = [0, 1, 1];
+        return;
+    }
+
+    this.matrix = function(){
+        this.viewMatrix = glMatrix.mat4.lookAt(glMatrix.mat4.create(),
+            this.eye,
+            this.center,
+            this.up
+        );
+        return glMatrix.mat4.mul(
+            this.viewMatrix,
+            glMatrix.mat4.ortho( glMatrix.mat4.create(), -40, 40, -40, 40, 0.1, 80),
+            this.viewMatrix
+        );
+    }
+
 }

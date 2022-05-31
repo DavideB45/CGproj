@@ -3,11 +3,10 @@ shadowShader = function(gl){
     var vertexShaderSource = `
         attribute vec3 aPosition;
         uniform mat4 uViewMatrix;
-        uniform mat4 uProjectionMatrix;
         uniform mat4 uModelMatrix;
 
         void main(void){
-            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+            gl_Position = uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
         }
     `;
     var fragmentShaderSource = `
@@ -18,6 +17,7 @@ shadowShader = function(gl){
         }
     `;
 
+    gl.getExtension('WEBGL_depth_texture');
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
     gl.compileShader(vertexShader);
@@ -43,7 +43,6 @@ shadowShader = function(gl){
 
     shaderProgram.aPositionIndex = aPositionIndex;
     shaderProgram.uModelMatrxLocation = gl.getUniformLocation(shaderProgram, "uModelMatrix");
-    shaderProgram.uProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
     shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
     return shaderProgram;
 }

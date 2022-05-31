@@ -68,7 +68,7 @@ Renderer.initializeObjects = function (gl) {
     createObjectBuffers(gl,Game.scene.buildingsObjTex[i].roof);// il tetto
     Game.scene.buildingsObjTex[i].roof.texture = 3;
   }
-
+  
 };
 
 /* draw the car */
@@ -210,21 +210,35 @@ Renderer.drawLamps = function(gl, stack){
 
 day_mode = 0;
 Renderer.drawScene = function (gl) {
+  
+  gl.activeTexture(gl.TEXTURE7);
+  Renderer.shadowTexture = 7;
+  Renderer.cameras[Renderer.fanale].update();
+  gl.bindTexture(gl.TEXTURE_2D,
+    createShadowMap(
+      gl, 
+      Renderer.shadowShader,
+      Renderer.cameras[Renderer.fanale].matrix(),
+      1024, 
+      createFramebuffer(gl, 1024),
+      Renderer, 
+      Game.scene
+    )
+  );
 
   var width = this.canvas.width;
   var height = this.canvas.height
   var ratio = width / height;
   var stack = new MatrixStack();
 
-  
   gl.viewport(0, 0, width, height);
   gl.enable(gl.DEPTH_TEST);
   // Clear the framebuffer
   gl.clearColor(0.34, 0.5, 0.74, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-
   gl.useProgram(this.flatShader);
+  gl.uniform1i(this.flatShader.uShadowMap, 7);
   gl.uniform1i(this.flatShader.uCarLight, 5);
   if(day_mode == 0){
     Renderer.gl.uniform3fv(this.flatShader.uLightDirection, Game.scene.weather.sunLightDirection);  
@@ -240,6 +254,7 @@ Renderer.drawScene = function (gl) {
   Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
   gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, Renderer.cameras[Renderer.currentCamera].matrix());
   gl.uniform3fv(this.flatShader.uViewPosition, Renderer.cameras[Renderer.currentCamera].eye);
+  gl.uniform3fv(this.flatShader.uLightPosition, Renderer.cameras[Renderer.fanale].eye);
   gl.uniformMatrix4fv(this.flatShader.uCarLigthMatrixLocation, false,Renderer.cameras[Renderer.fanale].matrix());
   
   // initialize the stack with the identity
@@ -297,6 +312,7 @@ Renderer.setupAndStart = function () {
 
   /* create the shader */
   Renderer.flatShader = new flatShader(Renderer.gl);
+  Renderer.shadowShader = new shadowShader(Renderer.gl);
 
   /* initialize objects to be rendered */
 	Renderer.initializeObjects(Renderer.gl);

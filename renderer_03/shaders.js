@@ -27,6 +27,7 @@ flatShader = function (gl) {
       vTexCoord = aTexCoord;
 
 	    gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+      //gl_Position = uCarLightMatrix * uModelMatrix * vec4(aPosition, 1.0);
     }                                              
   `;
 //flat Shader
@@ -48,12 +49,14 @@ flatShader = function (gl) {
   uniform int textureMode;// 0_no_texture 1_use_texture_basic 2_use_texture_+_bump
   
   uniform vec3 uViewPosition;// posizione della camera
+  uniform vec3 uLightPosition;// posizione della luce
   varying vec3 vPos;// fragment pos
   varying vec3 lDir;// light direction
   varying vec3 iNor;// interpolated normal
 
   uniform sampler2D uSampler;// texture dell'oggetto
   uniform sampler2D uCarLight;// texture della luce del veicolo
+  uniform sampler2D uShadowMap;// texture delle ombre
   varying vec2 vTexCoord;// coordinate texture del frammento
   varying vec4 vTexCoordFanale;// coordinata texture interpolata del fanale
 
@@ -88,36 +91,20 @@ flatShader = function (gl) {
         vec3 R = -lDir + 2.0*dot(lDir, N)*N;
         kSpec = max(0.0, pow(dot(vDir, R), 29.0))/1.5;
         lSpecular = (getBaseColor().rgb+vec3(1.0, 1.0, 1.0))*kSpec;
-        
         kDiffuse = max(dot(lDir, N), 0.2);
         lDiffuse = getBaseColor().rgb*kDiffuse*1.5;
       } else {
         lSpecular = vec3(0.0, 0.0, 0.0);
         lDiffuse = vec3(0.0, 0.0, 0.0);
         for(int i = 0; i < 12 ; i++){// prec max 12
-          if(vPos.x < arrayLamp[i].position.x + 0.6 && 
-            vPos.x > arrayLamp[i].position.x - 0.6 &&
-            vPos.y < arrayLamp[i].position.y - 0.2 && 
-            vPos.y > arrayLamp[i].position.y - 0.8 &&
-            vPos.z < arrayLamp[i].position.z + 0.6 && 
-            vPos.z > arrayLamp[i].position.z - 0.6){
+          if(vPos.x < arrayLamp[i].position.x + 0.6 && vPos.x > arrayLamp[i].position.x - 0.6 &&vPos.y < arrayLamp[i].position.y - 0.2 && vPos.y > arrayLamp[i].position.y - 0.8 &&vPos.z < arrayLamp[i].position.z + 0.6 && vPos.z > arrayLamp[i].position.z - 0.6){
             kDiffuse = 1.0;
             lDiffuse = arrayLamp[i].color*0.5 + getBaseColor().rgb*0.5;
             break;
           } else{
             vec3 light_to_frag = arrayLamp[i].position - vPos;
-            kSpec = specularL(
-              normalize(light_to_frag),
-              normalize(-arrayLamp[i].direction),
-              vDir,
-              N
-            )/12.0;
-            kDiffuse = diffusiveL(
-              normalize(light_to_frag),
-              normalize(-arrayLamp[i].direction),
-              vDir,
-              N
-            );
+            kSpec = specularL(normalize(light_to_frag),normalize(-arrayLamp[i].direction),vDir,N)/12.0;
+            kDiffuse = diffusiveL(normalize(light_to_frag),normalize(-arrayLamp[i].direction),vDir,N);
             lSpecular += (arrayLamp[i].color)*kSpec;
             if(kDiffuse > 0.0){
               lDiffuse += getBaseColor().rgb*kDiffuse*0.8 + arrayLamp[i].color*kDiffuse*0.5;
@@ -125,19 +112,25 @@ flatShader = function (gl) {
               lDiffuse += getBaseColor().rgb*0.02;
             }
           }
-        }                    //portare in spazio texture    //ruota   //trasla
-        float x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.7 + 0.5/vTexCoordFanale.w;
-        float y = (vTexCoordFanale.y/vTexCoordFanale.w)/2.0 + 0.5;
+        }                    //portare in spazio texture    
+        vec3 tC = (vec3(vTexCoordFanale/vTexCoordFanale.w).xyz)*0.5 + vec3(0.5, 0.5, 0.5);
+        float x = tC.x;
+        float y = tC.y;
         if(x > 0.0 && x < 1.0 &&
           y > 0.0 && y < 1.0 &&
-          vTexCoordFanale.w > 0.0){                                    //riduci ai bordi               //riduci con la distanza
-          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 3.0)/vTexCoordFanale.w;
-        }
-        x = (vTexCoordFanale.x/vTexCoordFanale.w)/2.0 + 0.3 - 0.5/vTexCoordFanale.w;
-        if(x > 0.0 && x < 1.0 &&
-          y > 0.0 && y < 1.0 &&
-          vTexCoordFanale.w > 0.0){
-          lDiffuse += (texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0)/vTexCoordFanale.w;
+          vTexCoordFanale.w > 0.0 &&
+          dot(N, (uLightPosition - vPos)) > 0.0){
+            float lightContribution = 0.0;
+            for(float i = 0.0; i < 5.0 ; i++){
+              for(float j = 0.0; j < 5.0 ; j++){
+                if(texture2D(uShadowMap, vec2(x,y) + vec2(i-2.0, j-2.0)/1024.0).x > tC.z &&
+                x < 0.99 && x > 0.01 &&
+                y < 0.99 && y > 0.01){
+                  lightContribution += 1.0/25.0;
+                }
+              }
+            }
+            lDiffuse += lightContribution*(texture2D(uCarLight, vec2(x,y)).rgb)*pow(texture2D(uCarLight, vec2(x,y)).a, 1.0)/vTexCoordFanale.w;
         }
       }
       gl_FragColor = vec4(lDiffuse + lSpecular, 1.0);
@@ -239,11 +232,13 @@ flatShader = function (gl) {
   shaderProgram.uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
   shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
   shaderProgram.uCarLight = gl.getUniformLocation(shaderProgram, "uCarLight");
+  shaderProgram.uShadowMap = gl.getUniformLocation(shaderProgram, "uShadowMap");
   shaderProgram.textureMode = gl.getUniformLocation(shaderProgram, "textureMode")
   
   shaderProgram.shadingMode = gl.getUniformLocation(shaderProgram, "shadingMode");
   shaderProgram.uViewMatrixLocation = gl.getUniformLocation(shaderProgram, "uViewMatrix");
   shaderProgram.uViewPosition = gl.getUniformLocation(shaderProgram, "uViewPosition");
+  shaderProgram.uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
   shaderProgram.uCarLigthMatrixLocation = gl.getUniformLocation(shaderProgram, "uCarLightMatrix");
   shaderProgram.uLightDirection = gl.getUniformLocation(shaderProgram, "uLightDirection");
   

@@ -1,14 +1,4 @@
-// vMatrix = glMatrix.mat4.create();
-// glMatrix.lookAt(vMatrix, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
-
-// pMatrix = glMatrix.mat4.create();
-// glMatrix.mat4.perspective(pMatrix, 45, canvas.width / canvas.height, 0.1, 100.0);
-// //or 
-// glMatrix.mat4.ortho(pMatrix, -1.0, 1.0, -1.0, 1.0, 0.1, 100.0);
-
 createFramebuffer = function(gl, size){
-    var depthFramebuffer = gl.createFramebuffer();
-
     var depthTexture = gl.createTexture();
     //create a texture containing the depth buffer
     gl.bindTexture(gl.TEXTURE_2D, depthTexture);
@@ -28,6 +18,7 @@ createFramebuffer = function(gl, size){
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    var depthFramebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, depthFramebuffer);
     //attach the texture to the framebuffer
     gl.framebufferTexture2D(
@@ -146,6 +137,38 @@ drawShadow = function(gl, shaderProgram, renderer, scene){
         stack.pop();
     }
 
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(),[2, 2, 2] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [1, 0, 0, 1], shaderProgram);
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[2.5, 0, 0] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [0, 1, 0, 1], shaderProgram);
+    stack.pop();
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[-2.5, 0, 0] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [0, 0, 1, 1], shaderProgram);
+    stack.pop();
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[0, 0, 15] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [1, 1, 0, 1], shaderProgram);
+    stack.pop();
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[0, 0, 30] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [0, 1, 1, 1], shaderProgram);
+    stack.pop();
+    stack.push();
+    stack.multiply(glMatrix.mat4.fromTranslation(glMatrix.mat4.create(),[10, 0, 30] ));
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
+    drawObject(gl, renderer.sphere, [0, 0, 1, 1], shaderProgram);
+    stack.pop();
+    stack.pop();
+
+    gl.uniformMatrix4fv(shaderProgram.uModelMatrxLocation, false, stack.matrix);
     //disegno il terreno
     drawObjectSimple(gl, scene.trackObj, [0.9, 0.8, 0.7, 1.0], shaderProgram);
     drawObjectSimple(gl, scene.buildingsObjTex[0], [0.9, 0.8, 0.7, 1.0], shaderProgram);
@@ -156,10 +179,10 @@ drawShadow = function(gl, shaderProgram, renderer, scene){
     }
 }
 
-createShadowMap = function(gl, shaderProgram, vMatrix, pMatrix, size, frameBuffer, renderer, scene){
-    gl.cullFace(gl.FRONT);
+createShadowMap = function(gl, shaderProgram, vMatrix, size, frameBuffer, renderer, scene){
     gl.useProgram(shaderProgram);
-    gl.uniformMatrix4fv(shaderProgram.uProjectionMatrixLocation, false, pMatrix);
+    gl.cullFace(gl.FRONT);
+    gl.enable(gl.CULL_FACE);
     gl.uniformMatrix4fv(shaderProgram.uViewMatrixLocation, false, vMatrix);
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
     gl.viewport(0, 0, size, size);
@@ -168,5 +191,6 @@ createShadowMap = function(gl, shaderProgram, vMatrix, pMatrix, size, frameBuffe
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);// vale per il fb valido
     drawShadow(gl, shaderProgram, renderer, scene);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    return frameBuffer;
+    gl.disable(gl.CULL_FACE);
+    return frameBuffer.depthTexture;
 }
