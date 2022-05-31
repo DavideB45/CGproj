@@ -126,7 +126,7 @@ Game = {
   		bbox[0], bbox[1] - 0.01, bbox[5]
   	];
 
-	Game.scene.groundObj = new Quadrilateral(quad, 10);
+	Game.scene.groundObj = new Quadrilateral(quad, 20);
 
 	Game.scene.buildingsObj  = new Array(Game.scene.buildings.length);
 	Game.scene.buildingsObjTex  = new Array(Game.scene.buildings.length);
