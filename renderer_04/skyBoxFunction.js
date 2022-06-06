@@ -12,13 +12,13 @@ loadCubeFace = function (gl, texture, face, path) {
     imgdata.src = path;
 }
 
-loadCubemap = function (tu,gl, negX, posY) { 
-    posx = "./../common/textures/cubemap/" + negX;
-    negx = "./../common/textures/cubemap/" + negX;
-    posy = "./../common/textures/cubemap/posy.jpg";
-    negy = "./../common/textures/cubemap/" + posY;
-    posz = "./../common/textures/cubemap/" + negX;
-    negz = "./../common/textures/cubemap/" + negX;
+loadCubemap = function (tu,gl) { 
+    var posx = "./../common/textures/cubemap/negx2.jpg";
+    var negx = "./../common/textures/cubemap/negx2.jpg";
+    var posy = "./../common/textures/cubemap/posy.jpg";
+    var negy = "./../common/textures/cubemap/negy.jpg";
+    var posz = "./../common/textures/cubemap/negx.jpg";
+    var negz = "./../common/textures/cubemap/negx.jpg";
     
     texture = gl.createTexture();
     gl.activeTexture(tu);

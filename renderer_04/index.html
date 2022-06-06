@@ -1,15 +1,7 @@
 <html>
 
-  <head >
-
-    <script type="text/javascript">
-		function log(msg){
-    		var textarea = document.getElementById("log");
-    		textarea.innerHTML += (msg + "\n");
-    		textarea.scrollTop = textarea.scrollHeight;
-		}
-    </script>
-    
+  <head >    
+		<link rel="stylesheet" href="style.css">
 		<script type="text/javascript" src="./../common/libs/gl-matrix/dist/gl-matrix.js"></script>
 		<script type="text/javascript" src="./../common/libs/matrix-stack.js"></script>
 		<script type="text/javascript" src="./../common/shapes/track_maker.js"></script>
@@ -35,54 +27,44 @@
 
   </head>
 
-  <body style = " background-color: bisque">
-	<div tabindex="1">
-    <canvas  tabindex='1'
-    	id     = "OUTPUT-CANVAS"
-    	width  = "600px"
-    	height = "600px"
-    	style  = "border: 1px solid black"
-    ></canvas>
-    </div>
-	<div style = "margin-left: 50px;">
-		<textarea id="log" rows="3" cols="60"></textarea>
-	</div>
-	
-	<div>
-	<table style="width: 502px; height: 10%; 
-	margin: 20px; background-color: bisque;text-align: center;">
-		<tr>
-		  <th> time </th>
-		  <th> camera </th>
-		  <th> free camera controls </th>
-		</tr>
-		<tr>
-		  <td>
-			<select style="background:rgba(128, 128, 128, 0); border-style:inset; border-radius: 7px;" 
-			name="ltype" id="ltype" onchange="update_day(this.value)">
-				<option value="0"> default </option>
-				<option value="1"> force night </option>
-				<option value="3"> force day </option>
-			</select>
-		  </td>
-		  <td>
-			<select style="background:rgba(128, 128, 128, 0); border-style:inset; border-radius: 7px;" 
-			name="lmode" id="lmode" onchange="update_camera(this.value)">			
-				<option value="1"> follow </option>
-				<option value="0"> from up </option>
-				<option value="3"> free </option>
-			</select>
-		  </td>
-		  <td>
-			<select style="background:rgba(128, 128, 128, 0); border-style:inset; border-radius: 7px;" 
-			name="cMod" id="cMod" onchange="update_mode(this.value)">			
-				<option value="1"> normal </option>
-				<option value="-5"> inverted </option>
-			</select>
-		  </td>
-		</tr>
-	  </table>
-	</div>
+  <table style="width: 690px;">
+	  <td>
+		<body style = " background-color: bisque; ">
+			<div tabindex="1">
+			<canvas  tabindex='1'
+				id     = "OUTPUT-CANVAS"
+				width  = "600px"
+				height = "600px"
+				style  = "border: 2px solid black;margin-top: 2px; border-radius: 7px;"
+			></canvas>
+			</div>
+		</td>
+		<td>
+			<div class="dropdown" >
+				<button class="dropbtn">TIME</button>
+					<div class="dropdown-content">
+					<button class="button" onclick="update_day(0)">default</button>
+					<button class="button" onclick="update_day(3)">day</button>
+					<button class="button" onclick="update_day(1)">night</button>
+					</div>
+			</div>
+			<div class="dropdown" >
+				<button class="dropbtn">CAMERA</button>
+					<div class="dropdown-content">
+					<button class="button" onclick="update_camera(1)">follow</button>
+					<button class="button" onclick="update_camera(0)">from up</button>
+					<button class="button" onclick="update_camera(3)">free</button>
+					</div>
+			</div>
+			<div class="dropdown" >
+				<button class="dropbtn">MOUSE</button>
+					<div class="dropdown-content">
+					<button class="button" onclick="update_mode(1)">normal</button>
+					<button class="button" onclick="update_mode(-1)">inverted</button>
+					</div>
+			</div>
+		</td>
+	</table>
 </body>
 
 </html>

@@ -28,6 +28,10 @@ Renderer.fillArrayLamp = function(){
       [0,-1,0]
     )
   }
+  this.gl.uniform3fv(
+    this.flatShader.spotlightCol[10], 
+    [0, 1, 1]
+  );
 }
 
 /* initialize the object in the scene */
@@ -37,7 +41,7 @@ Renderer.initializeObjects = function (gl) {
 
   Renderer.cube = new Cube();
   createObjectBuffers(gl, Renderer.cube);
-  Renderer.cubemapDay = loadCubemap(Renderer.gl.TEXTURE6, gl, "negx.jpg", "posy.jpg");
+  Renderer.cubemapDay = loadCubemap(Renderer.gl.TEXTURE6, gl);
   loadTexture(Renderer.gl, "./../common/textures/headlight.png", Renderer.gl.TEXTURE5, gl.RGBA);
   
   
@@ -96,7 +100,7 @@ Renderer.drawCar = function (stack, gl) {
   gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
   //Renderer.gl.uniform1i(this.flatShader.textureMode, 1);
   //gl.uniform1i(this.flatShader.uSampler, Renderer.carBody.texture);
-  drawObject(gl, Renderer.carBody, [0.0, 0.8, 0.4, 1], this.flatShader);
+  drawObject(gl, Renderer.carBody, [0, 139/255, 139/255, 1], this.flatShader);
   //Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
   stack.pop();
 
@@ -171,7 +175,7 @@ Renderer.drawLamps = function(gl, stack){
       stack.multiply(glMatrix.mat4.fromScaling(glMatrix.mat4.create(),[0.5, 0.5, 0.5] ));
       Renderer.gl.uniform1i(this.flatShader.shadingMode, 1);
       gl.uniformMatrix4fv(this.flatShader.uModelMatrxLocation, false, stack.matrix);
-      drawObject(gl, Renderer.lamp, [0.2, 0.8, 0.7, 1.0], this.flatShader);
+      drawObject(gl, Renderer.lamp, [0.5, 0.6, 0.6, 1.0], this.flatShader);
     stack.pop();
     stack.push();// lampadina
     stack.multiply(glMatrix.mat4.fromTranslation(
@@ -215,6 +219,7 @@ Renderer.drawScene = function (gl) {
   gl.clearColor(0.2, 0.2, 0.34, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   
+  Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
   gl.enable(gl.DEPTH_TEST);
   if(day_mode != 1){
     drawSkybox(gl, 
@@ -241,7 +246,7 @@ Renderer.drawScene = function (gl) {
   Renderer.gl.uniform1i(this.flatShader.textureMode, 0);
 
   gl.uniformMatrix4fv(this.flatShader.uProjectionMatrixLocation,false,glMatrix.mat4.perspective(glMatrix.mat4.create(),3.14 / 4, ratio, 1, 500));
-  Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
+  //Renderer.cameras[Renderer.currentCamera].update(this.car.position, this.car.wheelsAngle);
   gl.uniformMatrix4fv(this.flatShader.uViewMatrixLocation, false, Renderer.cameras[Renderer.currentCamera].matrix());
   gl.uniform3fv(this.flatShader.uViewPosition, Renderer.cameras[Renderer.currentCamera].eye);
   gl.uniform3fv(this.flatShader.uLightPosition, Renderer.cameras[Renderer.fanale].eye);
@@ -299,11 +304,6 @@ Renderer.setupAndStart = function () {
 	Renderer.canvas = document.getElementById("OUTPUT-CANVAS");
   /* get the webgl context */
 	Renderer.gl = Renderer.canvas.getContext("webgl");
-  /* read the webgl version and log */
-	var gl_version = Renderer.gl.getParameter(Renderer.gl.VERSION); 
-	log("glversion: " + gl_version);
-	var GLSL_version = Renderer.gl.getParameter(Renderer.gl.SHADING_LANGUAGE_VERSION)
-	log("glsl  version: "+GLSL_version);
 
   /* create the matrix stack */
 	Renderer.stack = new MatrixStack();
